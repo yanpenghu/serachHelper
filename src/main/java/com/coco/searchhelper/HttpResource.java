@@ -2,23 +2,33 @@ package com.coco.searchhelper;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Path("search")
+@RestController
 public class HttpResource {
 
-	@GET
-	@Produces(MediaType.WILDCARD)
-	public String getIt(@QueryParam("url") String url) throws Exception {
+	public static String DOMAIN = "DOMAIN";
+	
+	@RequestMapping("search")
+	public String getIt(HttpServletRequest request,String url) throws Exception {
+		if (url.startsWith("http")) {
+			request.getSession(true).setAttribute(DOMAIN, url);
+		}
 		Response response = Request.Get(url).execute();
 		return response.returnContent().asString(StandardCharsets.UTF_8);
 	}
 
+	@RequestMapping("/")
+	public String getOther(HttpServletRequest request,String url) throws Exception {
+		if (!url.startsWith("http")) {
+			url = request.getSession(true).getAttribute(DOMAIN) + url;
+		}
+		Response response = Request.Get(url).execute();
+		return response.returnContent().asString(StandardCharsets.UTF_8);
+	}
 }
